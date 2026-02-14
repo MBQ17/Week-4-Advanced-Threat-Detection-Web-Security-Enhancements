@@ -1,0 +1,47 @@
+1️⃣ Rate Limiting
+const rateLimit = require("express-rate-limit");
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+
+app.use("/api", limiter);
+
+2️⃣ CORS Configuration
+const cors = require("cors");
+
+app.use(cors({
+  origin: "https://yourdomain.com",
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+
+3️⃣ API Key Authentication
+app.use((req, res, next) => {
+  const apiKey = req.headers["x-api-key"];
+  if (apiKey !== process.env.API_KEY) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+});
+
+4️⃣ Helmet Security Headers + CSP
+const helmet = require("helmet");
+
+app.use(helmet());
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"]
+    }
+  })
+);
+
+5️⃣ HSTS (HTTPS Enforcement)
+app.use(
+  helmet.hsts({
+    maxAge: 31536000
+  })
+);
