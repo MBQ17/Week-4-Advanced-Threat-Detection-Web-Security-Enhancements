@@ -1,0 +1,140 @@
+🔹 PART 1: Intrusion Detection with Fail2Ban (Linux)
+Step 1: Update System
+
+Open Terminal.
+
+Run:
+
+sudo apt update
+
+Step 2: Install Fail2Ban
+sudo apt install fail2ban -y
+
+Step 3: Enable & Start Service
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+Step 4: Configure SSH Protection
+
+Open configuration file:
+
+sudo nano /etc/fail2ban/jail.local
+
+
+Add:
+
+[sshd]
+enabled = true
+maxretry = 5
+bantime = 600
+
+
+Save and exit.
+
+Restart Fail2Ban:
+
+sudo systemctl restart fail2ban
+
+Step 5: Verify It Works
+sudo fail2ban-client status sshd
+
+
+If you see "Currently banned", it means it is working.
+
+🔹 PART 2: Secure Your Node.js Backend API
+
+Make sure you already have:
+
+Node.js installed
+
+Express app created
+
+If not:
+
+npm init -y
+npm install express
+
+🔸 Step 1: Add Rate Limiting (Prevent Brute Force)
+Install:
+npm install express-rate-limit
+
+Add inside your server.js:
+const rateLimit = require("express-rate-limit");
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+
+app.use("/api", limiter);
+
+Test:
+
+Send more than 100 requests using Postman → You should get 429 error.
+
+🔸 Step 2: Secure CORS
+Install:
+npm install cors
+
+Add:
+const cors = require("cors");
+
+app.use(cors({
+  origin: "https://yourdomain.com",
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+
+Test:
+
+Try accessing API from another domain → Should block.
+
+🔸 Step 3: Add API Key Authentication
+Add in server.js:
+app.use((req, res, next) => {
+  const apiKey = req.headers["x-api-key"];
+  if (apiKey !== process.env.API_KEY) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+});
+
+Add Environment Variable:
+
+Linux:
+
+export API_KEY=your_secret_key
+
+
+Windows:
+
+set API_KEY=your_secret_key
+
+Test:
+
+Call API without API key → 401 Unauthorized
+Call with correct key → Access allowed
+
+🔸 Step 4: Add Security Headers & CSP
+Install:
+npm install helmet
+
+Add:
+const helmet = require("helmet");
+
+app.use(helmet());
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"]
+    }
+  })
+);
+
+🔸 Step 5: Enforce HTTPS (HSTS)
+app.use(
+  helmet.hsts({
+    maxAge: 31536000
+  })
+);
